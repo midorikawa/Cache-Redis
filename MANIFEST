@@ -1,3 +1,4 @@
+.gitignore
 Changes
 lib/Cache/Redis.pm
 Makefile.PL
@@ -13,3 +14,5 @@ t/07_msgp_scalar.t
 t/08_expires.t
 t/09_multibyte_string.t
 t/10_multibyte_hash.t
+t/11_storable_object.t
+t/12_json_object.t
