@@ -4,7 +4,7 @@ bless {test => 1}, shift;
 }
 
 package main;
-use Test::More tests => 2;
+use Test::More tests => 3;
 use Cache::Redis;
 use Storable;
 use Test::RedisServer;
@@ -38,4 +38,5 @@ my $ret = $cr->get($key);
 
 isa_ok $ret, "MYAPP";
 is $ret->{test}, 1;
+can_ok $ret, "new";
 

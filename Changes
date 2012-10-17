@@ -1,4 +1,5 @@
 Revision history for Perl extension Cache::Redis
-
+0.02  Wed Oct 17 22:19:00 +0900
+		test script correct
 0.01  Fri Oct  5 10:37:39 2012
 	- original version

@@ -8,7 +8,7 @@ my $redis_server;
 eval {
     $redis_server = Test::RedisServer->new(
         conf => {
-            port      => 6379,
+            port      => 9999,
             databases => 16,
             save      => '900 1',
         }
