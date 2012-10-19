@@ -4,7 +4,7 @@ use vars qw($VERSION);
 $VERSION = '0.04';
 use Carp qw(croak);
 use Redis;
-my ( $packer, $unpacker, $server, $encoding );
+my ( $packer, $unpacker, $server, $encoding, $reconnect );
 
 sub new {
     my ( $class, %params ) = @_;
@@ -12,6 +12,7 @@ sub new {
     $server = $ENV{REDIS_SERVER}
       || ( $params{host} || '127.0.0.1' ) . ":" . ( $params{port} || 6379 );
 	$encoding = $params{encoding} || undef;
+	$reconnect = $params{reconnect} || 60;
     if ( $params{serialize_methods} ) {
         if ( ref $params{serialize_methods} ne 'ARRAY' ) {
             croak "serialize_methods is coderef onry";
@@ -25,7 +26,7 @@ sub new {
     }
     my $self = {
         prefix => $params{prefix} || 'session',
-        redis  => Redis->new( server => $server, encoding => $encoding, reconnect => 60, ),
+        redis  => Redis->new( server => $server, encoding => $encoding, reconnect => $reconnect, ),
         server => $server,
         expires => $params{expires} || undef,
         serialize_methods => $params{serialize_methods}
@@ -38,7 +39,7 @@ sub _exec {
 
 	my $ret = eval {$self->{redis}->$cond(@args)};
 	if ($@){
-		$self->{redis} = Redis->new( server => $server, encoding => $encoding, reconnect => 60 );
+		$self->{redis} = Redis->new( server => $server, encoding => $encoding, reconnect => $reconnect );
 		$ret = $self->{redis}->$cond(@args);
 	}
 	if ($self->{expires} and ($cond eq 'get' or $cond eq 'set')){
