@@ -1,7 +1,7 @@
 package Cache::Redis;
 use strict;
 use vars qw($VERSION);
-$VERSION = '0.02';
+$VERSION = '0.03';
 use Carp qw(croak);
 use Redis;
 my ( $packer, $unpacker, $server, $encoding );
@@ -49,7 +49,6 @@ sub _exec {
 sub get {
     my ( $self, $key ) = @_;
     my $ret = $self->_exec('get', $key);
-    #$self->{expires} && $self->expire($key);
     $unpacker && $ret ? $unpacker->($ret) : $ret;
 }
 
@@ -61,7 +60,7 @@ sub set {
 
 sub remove {
     my ( $self, $key ) = @_;
-    $self->{redis}->del($key);
+    $self->_exec('del', $key);
 }
 
 1;

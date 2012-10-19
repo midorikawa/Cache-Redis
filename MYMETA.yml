@@ -24,4 +24,4 @@ requires:
   Storable: 0.01
   Test::More: 0.32
   Test::RedisServer: 0.01
-version: 0.01
+version: 0.03
