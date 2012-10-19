@@ -1,7 +1,7 @@
 package Cache::Redis;
 use strict;
 use vars qw($VERSION);
-$VERSION = '0.03';
+$VERSION = '0.04';
 use Carp qw(croak);
 use Redis;
 my ( $packer, $unpacker, $server, $encoding );
@@ -25,7 +25,7 @@ sub new {
     }
     my $self = {
         prefix => $params{prefix} || 'session',
-        redis  => Redis->new( server => $server, encoding => $encoding ),
+        redis  => Redis->new( server => $server, encoding => $encoding, reconnect => 60, ),
         server => $server,
         expires => $params{expires} || undef,
         serialize_methods => $params{serialize_methods}
@@ -38,7 +38,7 @@ sub _exec {
 
 	my $ret = eval {$self->{redis}->$cond(@args)};
 	if ($@){
-		$self->{redis} = Redis->new( server => $server, encoding => $encoding );
+		$self->{redis} = Redis->new( server => $server, encoding => $encoding, reconnect => 60 );
 		$ret = $self->{redis}->$cond(@args);
 	}
 	if ($self->{expires} and ($cond eq 'get' or $cond eq 'set')){
