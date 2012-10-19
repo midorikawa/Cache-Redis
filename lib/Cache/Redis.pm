@@ -1,17 +1,17 @@
 package Cache::Redis;
-
 use strict;
 use vars qw($VERSION);
-$VERSION = '0.01';
+$VERSION = '0.02';
 use Carp qw(croak);
 use Redis;
-my ( $packer, $unpacker );
+my ( $packer, $unpacker, $server, $encoding );
 
 sub new {
     my ( $class, %params ) = @_;
 
-    my $server = $ENV{REDIS_SERVER}
+    $server = $ENV{REDIS_SERVER}
       || ( $params{host} || '127.0.0.1' ) . ":" . ( $params{port} || 6379 );
+	$encoding = $params{encoding} || undef;
     if ( $params{serialize_methods} ) {
         if ( ref $params{serialize_methods} ne 'ARRAY' ) {
             croak "serialize_methods is coderef onry";
@@ -25,7 +25,7 @@ sub new {
     }
     my $self = {
         prefix => $params{prefix} || 'session',
-        redis  => Redis->new( server => $server, encoding => $params{encodind}||undef ),
+        redis  => Redis->new( server => $server, encoding => $encoding ),
         server => $server,
         expires => $params{expires} || undef,
         serialize_methods => $params{serialize_methods}
@@ -33,24 +33,31 @@ sub new {
 
     bless $self, $class;
 }
+sub _exec {
+	my ($self, $cond, @args) = @_;
 
+	my $ret = eval {$self->{redis}->$cond(@args)};
+	if ($@){
+		$self->{redis} = Redis->new( server => $server, encoding => $encoding );
+		$ret = $self->{redis}->$cond(@args);
+	}
+	if ($self->{expires} and ($cond eq 'get' or $cond eq 'set')){
+		$self->{redis}->expire($args[0], $self->{expires});
+	}
+	$ret;
+}
 sub get {
     my ( $self, $key ) = @_;
-    my $ret = $self->{redis}->get($key);
-    $self->{expires} && $self->expire($key);
+    my $ret = $self->_exec('get', $key);
+    #$self->{expires} && $self->expire($key);
     $unpacker && $ret ? $unpacker->($ret) : $ret;
 }
 
 sub set {
     my ( $self, $key, $val ) = @_;
-    $self->{redis}->set( $key, $packer && $val ? $packer->($val) : $val );
-    $self->{expires} && $self->expire($key);
+    $self->_exec('set', $key, $packer && $val ? $packer->($val) : $val );
 }
 
-sub expire {
-    my ( $self, $key ) = @_;
-    $self->{redis}->expire( $key, $self->{expires} );
-}
 
 sub remove {
     my ( $self, $key ) = @_;
@@ -70,6 +77,7 @@ Cache::Redis -
 
 use Data::MessagePack;
 my $cr = Cache::Redis->new(
+	expires => 86400,
     serialize_methods => [
         sub { Data::MessagePack->pack( +shift ) },
         sub { Data::MessagePack->unpack( +shift ) }
