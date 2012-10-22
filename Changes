@@ -1,4 +1,8 @@
 Revision history for Perl extension Cache::Redis
+0.64  Mon Oct 22 2012 16:20:00 +0900
+	a few fix
+0.06  Sat Oct 18 2012 15:34:00 +0900
+	sock attribute add
 0.04  Wed Oct 17 2012 19:32:00 +0900
 		redis reconnect attribute add
 0.03  Wed Oct 17 2012 16:38:00 +0900
